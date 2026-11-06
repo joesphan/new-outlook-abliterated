@@ -1,0 +1,24 @@
+# Ad-delivery hosts used by the new Outlook for Windows (olk.exe).
+# One hostname per line. Blank lines and lines starting with # are ignored.
+#
+# Microsoft Audience Network + Iris creative selection
+arc.msn.com
+# Microsoft SSP on Xandr / AppNexus — the in-list auction endpoint (msft-ssp.adnxs.com/ut/v3)
+msft-ssp.adnxs.com
+msft-ssp-uswest.adnxs.com
+# CNAME chain the SSP resolves through
+xandrpme-msft-ssp.trafficmanager.net
+msft-ssp.appnexusgslb.com
+xandrpme-g-geo.trafficmanager.net
+# Xandr impression bus and prebid identity syncs
+ib.adnxs.com
+ib.anycast.adnxs.com
+secure.adnxs.com
+acdn.adnxs.com
+lax1-ib.adnxs.com
+fra1-ib.adnxs.com
+adnxs.com
+adnxs-simple.com
+# TripleLift bidder syncs issued by the OWA ad module
+eb2.3lift.com
+us-east-eb2.3lift.com

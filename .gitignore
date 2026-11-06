@@ -1,0 +1,9 @@
+# Capture output from tools/Capture-OutlookWindow.ps1
+*.png
+*.jpg
+
+# Local scratch
+*.log
+.vscode/
+.idea/
+Thumbs.db
