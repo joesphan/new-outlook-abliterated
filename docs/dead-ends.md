@@ -89,16 +89,68 @@ adnxs-simple.com
 
 ## 5. "Decompile and rewrite `olk.exe`"
 
-**Attempted**: read the executable to inspect it.
+**Attempted**: read the package to inspect it. The first try reported the path did not exist — that
+was **not** an ACL denial: the app had silently updated (`1.2026.1020.100` → `1.2026.1026.100`) and the
+versioned directory was gone. With an elevated token and the live path, the package enumerates
+(141 entries) and reads normally.
 
-**Result**: unreadable.
+**Result**: decompiled — and empty of anything to strip. `olk.exe` is 177,464 bytes; the logic sits in
+`olkmain.dll` / `nh.dll` / `olknh.dll`, which are WebView2 host wrappers, and the ad surface is
+JavaScript plus the host's own resource pipeline. Full inventory, recovered symbols and their
+consequences: [native-host.md](native-host.md).
+
+**Why a rewrite is not the same axis**: rewriting the client is legitimate; reusing its decompiled
+code is not. But nothing in the binary decides whether the row appears, so a rewrite that starts
+from these binaries has no seam to cut either.
+
+---
+
+## 6. Injecting browser arguments — the environment variable route
+
+**Attempted**: the registry policy is not a real policy (§1), but `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`
+is a documented WebView2 mechanism. Set it per-user and restart the app:
+
+```powershell
+[Environment]::SetEnvironmentVariable('WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS',
+  '--host-resolver-rules="MAP arc.msn.com ~NOTFOUND"', 'User')
+```
+
+**Result**: no effect. The browser process command line, sampled after the restarted app was up,
+contained the app's own flags and not ours:
 
 ```
-Path: C:\Program Files\WindowsApps\Microsoft.OutlookForWindows_1.2026.1020.100_x64__8wekyb3d8bbwe\olk.exe
-Test-Path → False   (ACL: TrustedInstaller; the WindowsApps directory denies enumeration to standard users)
+--embedded-browser-webview=1 --webview-exe-name=olk.exe --webview-exe-version=1.2026.1026.100
+--user-data-dir=... --disable-features=msEnhancedTrackingPreventionEnabled
+--enable-features=msSingleSignOnOSForPrimaryAccountIsShared,DocumentPolicyNetworkEfficiencyGuardrails
 ```
 
-**Why it is also the wrong lever**: the executable is a thin MSIX host for WebView2. The UI, including the ad row, is JavaScript delivered by the service. Even with ownership taken, there is no ad logic in the binary to ablate — and redistributing the client is copyright infringement.
+**Why**: this is the exact case WebView2 documents — additional arguments from the environment are
+a fallback for apps that do not supply their own options. This app does supply them. Its symbols
+say so directly:
+
+```
+WrappedEnvironmentOptions::SetAdditionalBrowserArguments(basic_zstring_view<wchar_t>)
+CreateCoreWebView2EnvironmentWithOptions(..., environmentOptions.Get(), ...)
+```
+
+and `olkmain.dll` embeds the literals `--enable-features=` / `--disable-features=`. The argument
+string is composed in code with no user input.
+
+---
+
+## 7. Why the creative survives a DNS block at all
+
+`nh.dll` registers resource handlers of its own:
+
+```
+OutlookWebHost::Outlook::AddWebResourceRequestReceived()
+OutlookWebHost::Outlook::AddUnfilteredWindowWebRequestReceived()
+OutlookWebHost::Outlook::MakeResourceRequestResponse()
+```
+
+The native host can fetch a resource through its own authenticated channel and hand the response
+to the WebView. A request served that way never resolves a name the hosts file governs, which is
+why the row survives with every ad host pointed at `0.0.0.0`. See [native-host.md](native-host.md).
 
 ---
 
@@ -107,7 +159,9 @@ Test-Path → False   (ACL: TrustedInstaller; the WindowsApps directory denies e
 | Approach | Outcome |
 |---|---|
 | WebView2 arg policy | Ignored — no such policy |
+| `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` env var | Ignored — the app supplies its own compiled-in options |
 | Cached-bundle patch | Reverted on next launch |
 | Hosts block of auction chain | Third-party creatives gone, slot remains |
 | Flight kill switches | Server-side only |
-| Decompile/rewrite the exe | Unreadable, and no ad logic inside |
+| Decompile the package | Works; nothing in it decides the row |
+| Native resource pipeline | Serves the creative in-band; no name to block |

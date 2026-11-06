@@ -18,6 +18,7 @@ Findings from a hands-on session against:
 | Stop third-party ad creatives and bidder/tracking calls in the desktop app | **Works** — `tools/Block-OutlookAdHosts.ps1` |
 | Show which ad hosts the app attempted, and prove the block bit | **Works** — `tools/Test-OutlookAdHosts.ps1` |
 | Reproduce the visual verification loop | **Works** — `tools/Capture-OutlookWindow.ps1` |
+| Know what is inside the installed package and where the row actually comes from | **Works** — [docs/native-host.md](docs/native-host.md) |
 | Remove the `Ad`-labelled row from the message list entirely | **Does not work client-side.** See [docs/dead-ends.md](docs/dead-ends.md) |
 
 Be clear about the ceiling before you install anything: **the in-list row is a product surface of the free tier, not a creative fetched from a host you can block.** With every known ad endpoint blackholed, the row still renders with Microsoft's own `Upgrade Your Account` promo. Removing that requires a Microsoft 365 subscription (server-side), classic Outlook, or a browser client where a content blocker can hide the DOM node.
@@ -57,7 +58,8 @@ ipconfig /flushdns
 ## Contents
 
 - [docs/ad-architecture.md](docs/ad-architecture.md) — how the ads are delivered, with the evidence that pinned each hop
-- [docs/dead-ends.md](docs/dead-ends.md) — four approaches that do not work, and exactly why
+- [docs/native-host.md](docs/native-host.md) — decompilation: package inventory, recovered host symbols, why the creative is in-band
+- [docs/dead-ends.md](docs/dead-ends.md) — seven approaches that do not work, and exactly why
 - [docs/verification.md](docs/verification.md) — the reproducible loop used to prove each claim
 - `tools/` — hosts installer, resolver test, window capture helper
 
