@@ -69,6 +69,10 @@ No Microsoft code is contained in or redistributed by this repository. Everythin
 
 Decompiling and republishing that client would be copyright infringement; this project deliberately does not.
 
+## See also
+
+- [outlook-tui](https://github.com/joesphan/outlook-tui) — an ad-free terminal client for the same mailboxes. No ad slot to remove, because there is no ad slot.
+
 ## License
 
 MIT for the contents of this repository — see [LICENSE](LICENSE).
